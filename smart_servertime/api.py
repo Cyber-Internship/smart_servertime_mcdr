@@ -40,7 +40,6 @@ def stop_cooldown():
 def on_load(server: MCDR.PluginServerInterface):
 	server.register_event_listener(loginproxy.ON_PING, _on_ping_listener)
 	server.register_event_listener(loginproxy.ON_LOGIN, _on_login_listener0(server.get_plugin_command_source()))
-	server.register_event_listener(loginproxy.ON_LOGOFF, lambda s, _, c: get_player_count(server) == 0 and refresh_cooldown())
 	cooldown_timer = new_timer(get_config().server_startup_protection * 60, refresh_cooldown)
 
 def on_unload(server: MCDR.PluginServerInterface):
@@ -50,8 +49,11 @@ def on_player_joined(server: MCDR.PluginServerInterface, player: str, info: MCDR
 	stop_cooldown()
 	model.joined(player)
 
+@new_thread
 def on_player_left(server: MCDR.PluginServerInterface, player: str):
 	model.left(player)
+	if get_player_count(server) == 0:
+		refresh_cooldown()
 
 def on_server_start(server: MCDR.PluginServerInterface):
 	global server_start_time
